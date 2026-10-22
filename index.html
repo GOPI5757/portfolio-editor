@@ -6990,10 +6990,65 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 })(globalThis);
 
 </script><script>
+/* Local ES-module preview loader. This transforms only the preview, never exports. */
+(function(global){
+ const C=PortfolioCore;
+ function bundle(sources,entries,{root='',rewrite=(v)=>v}={}){
+  const needed=new Set();
+  function resolve(from,specifier){
+   if(typeof specifier!=='string'||!/^\.?\.?\//.test(specifier))throw Error('Preview requires a local module path: '+specifier);
+   const clean=specifier.split(/[?#]/)[0];
+   return clean.startsWith('/')?C.normalize(root+clean.slice(1)):C.resolve(from,clean);
+  }
+  function imports(ast,path){const result=[];C.walk(ast,node=>{
+   if(node.type==='ImportDeclaration'||((node.type==='ExportNamedDeclaration'||node.type==='ExportAllDeclaration')&&node.source))result.push(resolve(path,node.source.value));
+   if(node.type==='ImportExpression'){
+    const value=node.source.type==='Literal'?node.source.value:node.source.type==='TemplateLiteral'&&!node.source.expressions.length?node.source.quasis[0].value.cooked:null;
+    if(typeof value!=='string')throw Error('Preview cannot resolve a computed import in '+path+'. Use a literal local import path or built output.');
+    result.push(resolve(path,value));
+   }
+  });return result;}
+  function visit(path){if(needed.has(path))return;if(!sources.has(path))throw Error('Missing local script: '+path);needed.add(path);imports(C.parse(sources.get(path)),path).forEach(visit);}
+  entries.forEach(visit);
+  const names=node=>node.type==='Identifier'?[node.name]:node.type==='ObjectPattern'?node.properties.flatMap(p=>names(p.value||p.argument)):node.type==='ArrayPattern'?node.elements.filter(Boolean).flatMap(names):node.type==='AssignmentPattern'?names(node.left):node.type==='RestElement'?names(node.argument):[];
+  function compile(path){
+   const source=C.rewriteStrings(sources.get(path),v=>rewrite(v,path)),ast=C.parse(source),changes=[],before=[],after=[];
+   const expose=(name,expression)=>after.push(`Object.defineProperty(exports,${JSON.stringify(name)},{enumerable:true,get:()=>${expression}});`);
+   let serial=0;
+   for(const node of ast.body){
+    if(node.type==='ImportDeclaration'){
+     const dependency=JSON.stringify(resolve(path,node.source.value)),temp='__studioDependency'+serial++;
+     before.push(`const ${temp}=await __require(${dependency});`);
+     for(const spec of node.specifiers)before.push(`const ${spec.local.name}=${spec.type==='ImportNamespaceSpecifier'?temp:`${temp}[${JSON.stringify(spec.type==='ImportDefaultSpecifier'?'default':spec.imported.name??spec.imported.value)}]`};`);
+     changes.push({start:node.start,end:node.end,text:''});
+    }else if(node.type==='ExportNamedDeclaration'){
+     if(node.declaration){changes.push({start:node.start,end:node.declaration.start,text:''});const d=node.declaration;for(const n of d.type==='VariableDeclaration'?d.declarations.flatMap(x=>names(x.id)):[d.id.name])expose(n,n);}
+     else {changes.push({start:node.start,end:node.end,text:''});let temp='';if(node.source){temp='__studioDependency'+serial++;before.push(`const ${temp}=await __require(${JSON.stringify(resolve(path,node.source.value))});`);}for(const s of node.specifiers)expose(s.exported.name??s.exported.value,temp?`${temp}[${JSON.stringify(s.local.name??s.local.value)}]`:s.local.name);}
+    }else if(node.type==='ExportDefaultDeclaration'){
+     const d=node.declaration;if((d.type==='FunctionDeclaration'||d.type==='ClassDeclaration')&&d.id){changes.push({start:node.start,end:d.start,text:''});expose('default',d.id.name);}else{changes.push({start:node.start,end:d.start,text:'const __studioDefault='});expose('default','__studioDefault');}
+    }else if(node.type==='ExportAllDeclaration'){
+     const temp='__studioDependency'+serial++;before.push(`const ${temp}=await __require(${JSON.stringify(resolve(path,node.source.value))});`);changes.push({start:node.start,end:node.end,text:''});if(node.exported)expose(node.exported.name??node.exported.value,temp);else after.push(`for(const key of Object.keys(${temp})){if(key!=='default'&&!Object.hasOwn(exports,key))Object.defineProperty(exports,key,{enumerable:true,get:()=>${temp}[key]});}`);
+    }
+   }
+   C.walk(ast,node=>{
+    if(node.type==='ImportExpression'){const spec=node.source.type==='Literal'?node.source.value:node.source.quasis[0].value.cooked;changes.push({start:node.start,end:node.end,text:`__require(${JSON.stringify(resolve(path,spec))})`});}
+    if(node.type==='MemberExpression'&&!node.computed&&['pathname','search','href','origin'].includes(node.property.name)&&(node.object.type==='Identifier'&&node.object.name==='location'||node.object.type==='MemberExpression'&&node.object.object.name==='window'&&node.object.property.name==='location'))changes.push({start:node.start,end:node.end,text:'__location.'+node.property.name});
+   });
+   return before.join('\n')+'\n'+C.edits(source,changes)+'\n'+after.join('\n');
+  }
+  return `(async()=>{const __records=Object.create(null),__factories={${[...needed].map(p=>`${JSON.stringify(p)}:async function(exports,__require,__location){"use strict";\n${compile(p)}\n}`).join(',')}};
+function __load(path,chain=[]){const existing=__records[path];if(existing){if(!existing.done&&chain.includes(path))return Promise.reject(new Error('Cyclic module initialization is not supported by this preview: '+path));return existing.promise;}if(!__factories[path])return Promise.reject(new Error('Missing preview module: '+path));const record=__records[path]={exports:Object.create(null),done:false};record.promise=Promise.resolve().then(()=>__factories[path](record.exports,p=>__load(p,[...chain,path]),window.__portfolioPreviewLocation||location)).then(()=>{record.done=true;return record.exports;});return record.promise;}
+${entries.map(p=>`await __load(${JSON.stringify(p)});`).join('\n')}
+})().catch(error=>{window.dispatchEvent(new ErrorEvent('error',{message:error.message,error}));});`;
+ }
+ global.PortfolioModules={bundle};if(typeof module!=='undefined')module.exports=global.PortfolioModules;
+})(globalThis);
+
+</script><script>
 (function(global){
  const C=PortfolioCore;
  class Preview {
-  constructor(frame,onSelect,onError){this.frame=frame;this.onSelect=onSelect;this.onError=onError;this.urls=[];this.assetCache=new Map();this.hash='#top';this.scroll=0;this.select=true;this.generation=0;this.entry=null;
+  constructor(frame,onSelect,onError){this.frame=frame;this.onSelect=onSelect;this.onError=onError;this.urls=[];this.assetCache=new Map();this.hash='#top';this.scroll=0;this.select=true;this.generation=0;this.entry=null;this.search='';
    window.addEventListener('message',e=>{if(e.source!==frame.contentWindow||!e.data?.studio)return;const m=e.data;if(m.type==='select')onSelect(m);if(m.type==='route'){this.hash=m.hash;this.scroll=m.scroll||0;this.onRoute?.(m.hash);}if(m.type==='error')onError(m.message);if(m.type==='page')this.onPage?.(m.href);});
   }
   async build(w,{intro=false}={}){
@@ -7008,20 +7063,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
    const sources=new Map();for(const p of files.filter(p=>/\.(js|mjs)$/i.test(p))){sources.set(p,await w.text(p));}
    if(!intro&&sources.has(root+'config/intro.js')){try{const source=sources.get(root+'config/intro.js'),widgets=C.get(source,'introWidgets');if(Array.isArray(widgets))sources.set(root+'config/intro.js',C.patch(source,'introWidgets',[],widgets.map(x=>({...x,enabled:false}))));}catch{}}
    const cssCache=new Map();const css=async(path,seen=new Set())=>{if(seen.has(path))return '';if(cssCache.has(path))return cssCache.get(path);seen.add(path);let s=await w.text(path);s=s.replace(/url\(\s*(['"]?)([^)'"\s]+)\1\s*\)/g,(_,q,url)=>`url("${asset(url,path)}")`);const imports=[...s.matchAll(/@import\s+(?:url\()?['"]([^'"]+)['"]\)?\s*;/g)];for(const m of imports)if(!/^https?:/.test(m[1])){const p=C.resolve(path,m[1]);s=s.replace(m[0],await css(p,seen));}cssCache.set(path,s);return s;};
-   const compile=(path)=>{let source=sources.get(path);if(source===undefined)throw Error('Missing local script: '+path);source=C.rewriteStrings(source,v=>asset(v,path));const ast=C.parse(source),patches=[],after=[];
-    for(const node of ast.body){
-     if(node.type==='ImportDeclaration'){
-      if(!node.source.value.startsWith('.'))throw Error('Preview needs a local built script for import '+node.source.value);
-      const dep=C.resolve(path,node.source.value),parts=node.specifiers.map(s=>s.type==='ImportNamespaceSpecifier'?`const ${s.local.name}=__require(${JSON.stringify(dep)});`:`const ${s.local.name}=__require(${JSON.stringify(dep)})[${JSON.stringify(s.type==='ImportDefaultSpecifier'?'default':s.imported.name)}];`).join('');
-      patches.push({start:node.start,end:node.end,text:parts||`__require(${JSON.stringify(dep)});`});
-     } else if(node.type==='ExportNamedDeclaration'){
-      if(node.declaration){patches.push({start:node.start,end:node.declaration.start,text:''});const d=node.declaration;const names=d.type==='VariableDeclaration'?d.declarations.map(x=>x.id.name):[d.id.name];for(const n of names)after.push(`Object.defineProperty(exports,${JSON.stringify(n)},{get:()=>${n}});`);}
-      else if(!node.source){patches.push({start:node.start,end:node.end,text:''});for(const s of node.specifiers)after.push(`Object.defineProperty(exports,${JSON.stringify(s.exported.name)},{get:()=>${s.local.name}});`);}
-      else throw Error('Re-export needs a built script: '+path);
-     } else if(node.type==='ExportDefaultDeclaration'){patches.push({start:node.start,end:node.declaration.start,text:'const __default='});after.push('exports.default=__default;');}
-    }
-    return C.edits(source,patches)+'\n'+after.join('\n');
-   };
    let doc=new DOMParser().parseFromString(await w.text(root+entry),'text/html');doc.querySelectorAll('base,meta[http-equiv="Content-Security-Policy"]').forEach(e=>e.remove());
    if(doc.querySelector('#site-shell'))doc.querySelector('#intro-root')?.replaceChildren();
    for(const link of [...doc.querySelectorAll('link[rel="stylesheet"]')]){const href=link.getAttribute('href');if(/^https?:/.test(href))continue;try{const style=doc.createElement('style');style.textContent=await css(C.resolve(root+entry,href));link.replaceWith(style);}catch{link.remove();}}
@@ -7031,9 +7072,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     if(script.type==='module'){if(src)moduleEntries.push(C.resolve(root+entry,src));else{const p=root+'__inline-'+moduleEntries.length+'.js';sources.set(p,script.textContent);moduleEntries.push(p);}script.remove();}
     else if(src){script.removeAttribute('src');script.removeAttribute('defer');script.removeAttribute('async');const p=C.resolve(root+entry,src);script.textContent=C.rewriteStrings(sources.get(p)||'',v=>asset(v,p));}
    }
-   const needed=new Set(),visit=p=>{if(needed.has(p))return;needed.add(p);for(const n of C.parse(sources.get(p)||'').body)if(n.type==='ImportDeclaration')visit(C.resolve(p,n.source.value));};moduleEntries.forEach(visit);
-   const runtime=doc.createElement('script');runtime.textContent='(()=>{const __cache={},__factories={'+[...needed].map(p=>`${JSON.stringify(p)}:function(exports,__require){\n${compile(p)}\n}`).join(',')+'};function __require(p){if(__cache[p])return __cache[p];if(!__factories[p])throw Error("Missing module "+p);const e=__cache[p]={};__factories[p](e,__require);return e;}'+moduleEntries.map(p=>`__require(${JSON.stringify(p)});`).join('')+'})();';doc.body.append(runtime);
-   const bridge=doc.createElement('script');bridge.textContent=`(${bridgeCode.toString()})(${JSON.stringify({hash:this.hash,scroll:this.scroll,select:this.select,intro,pages:files.filter(p=>/\.html?$/.test(p)).map(p=>p.slice(root.length)),assets:Object.fromEntries([...assets].map(([p,u])=>[u,p.slice(root.length)]))})});`;doc.head.prepend(bridge);
+   const runtime=doc.createElement('script');runtime.textContent=PortfolioModules.bundle(sources,moduleEntries,{root,rewrite:asset});doc.body.append(runtime);
+   const bridge=doc.createElement('script');bridge.textContent=`(${bridgeCode.toString()})(${JSON.stringify({hash:this.hash,scroll:this.scroll,select:this.select,intro,entry,search:this.search,pages:files.filter(p=>/\.html?$/.test(p)).map(p=>p.slice(root.length)),assets:Object.fromEntries([...assets].map(([p,u])=>[u,p.slice(root.length)]))})});`;doc.head.prepend(bridge);
    const csp=doc.createElement('meta');csp.httpEquiv='Content-Security-Policy';csp.content="default-src 'none'; script-src 'unsafe-inline' blob:; style-src 'unsafe-inline' blob: https:; img-src blob: data: https:; media-src blob: data: https:; font-src blob: data: https:; frame-src https://www.youtube-nocookie.com https://www.youtube.com; connect-src 'none'; form-action 'none'; base-uri 'none'";doc.head.prepend(csp);
    if(generation!==this.generation){urls.forEach(URL.revokeObjectURL);return;}
    doc.querySelectorAll('script').forEach(s=>s.textContent=s.textContent.replace(/<\/script/gi,'<\\/script'));
@@ -7048,6 +7088,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   dispose(){this.urls.forEach(URL.revokeObjectURL);this.assetCache.clear();}
  }
  function bridgeCode(options){
+  const virtualURL=new URL(options.entry+(options.search||''),'https://portfolio.invalid/');Object.defineProperty(window,'__portfolioPreviewLocation',{value:virtualURL});
   let selecting=options.select;const send=(type,extra={})=>parent.postMessage({studio:true,type,...extra},'*');
   window.addEventListener('error',e=>{if(!e.message.includes('ResizeObserver loop'))send('error',{message:e.message});});window.addEventListener('unhandledrejection',e=>send('error',{message:String(e.reason?.message||e.reason)}));
   const shim=()=>{const values=new Map();return {getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,String(v)),removeItem:k=>values.delete(k),clear:()=>values.clear()};};
@@ -7121,7 +7162,7 @@ async function ask(title,fields,submitLabel='Save'){return new Promise(resolve=>
 const preview=new PortfolioPreview($('#preview'),m=>safe(()=>inspectElement(m)),message=>{$('#preview-error').hidden=false;$('#preview-error').textContent=message;});
 async function refreshPreview(intro=false){if(!W.zip)return;$('#preview-status').textContent='Updating preview…';$('#preview-error').hidden=true;try{await preview.build(W,{intro});$('#preview-status').textContent='Preview up to date';}catch(e){$('#preview-error').hidden=false;$('#preview-error').textContent='Preview: '+e.message;$('#preview-status').textContent='Preview needs attention';}}
 async function load(file,restore){if(importing)return;await flushInputs();if(!restore&&dirty&&!confirm('Open another portfolio? Export or save your current draft first if you want to keep its changes.'))return;importing=true;busy('Opening your portfolio…','Reading the ZIP and detecting editable sections. Large video archives may take a moment.');try{
- preview.dispose();preview.entry=null;preview.hash='#top';preview.scroll=0;for(const u of assetURLs.values())URL.revokeObjectURL(u);assetURLs.clear();await W.import(file);
+ preview.dispose();preview.entry=null;preview.search='';preview.hash='#top';preview.scroll=0;for(const u of assetURLs.values())URL.revokeObjectURL(u);assetURLs.clear();await W.import(file);
  if(restore){W.overrides=new Map(restore.overrides);W.deleted=new Set(restore.deleted);W.name=restore.name;}
  models=await W.models();dirty=!!restore;selection=null;$('#landing').hidden=true;$('#studio').hidden=false;$('#workspace-name').textContent=W.name+'.zip';assetFolder=W.root+'assets/';assetSearch='';assetPage=0;
  renderNav();renderRoutes();await refreshPreview();const profile=rootRef('profileWidgets');if(profile)await select(child(profile,0));else if(models.some(m=>m.roots.length))await select(ref(models.find(m=>m.roots.length).file,models.find(m=>m.roots.length).roots[0].name));else renderWelcome();
@@ -7134,7 +7175,7 @@ async function saveDraft(){if(!W.zip)return;await flushInputs();try{$('#save-sta
 $('#save-draft').onclick=saveDraft;$('#undo').onclick=()=>safe(async()=>{await flushInputs();W.undo();if(selection)await select(selection);});$('#redo').onclick=()=>safe(async()=>{await flushInputs();W.redo();if(selection)await select(selection);});$('#autosave').onchange=()=>{$('#autosave').checked&&saveDraft();};
 PortfolioDrafts.read().then(d=>{if(d){$('#restore-draft').hidden=false;$('#restore-draft').textContent='Continue draft · '+new Date(d.time).toLocaleDateString();$('#restore-draft').onclick=()=>safe(()=>load(d.original,d));}}).catch(()=>{});
 $('#select-mode').onclick=()=>setMode(true);$('#browse-mode').onclick=()=>setMode(false);function setMode(v){preview.mode(v);$('#select-mode').classList.toggle('active',v);$('#browse-mode').classList.toggle('active',!v);$('.preview-hint').innerHTML=v?'<i></i> Select an element in the preview, or choose a section on the left.':'<i></i> Navigate your site normally. Switch to Select to edit its content.';}
-$('#preview-route').onchange=e=>safe(async()=>{if(e.target.value.startsWith('@page:')){preview.entry=e.target.value.slice(6);preview.hash='';preview.scroll=0;await refreshPreview();}else if(preview.entry){preview.entry=null;preview.hash=e.target.value;preview.scroll=0;await refreshPreview();}else preview.route(e.target.value);setMode(false);}); preview.onRoute=hash=>{const value=preview.entry?'@page:'+preview.entry:hash;if([...$('#preview-route').options].some(o=>o.value===value))$('#preview-route').value=value;}; preview.onPage=async href=>{const parts=href.split('#'),path=C.resolve(W.root+(preview.entry||W.entry),parts[0].split('?')[0]);if(W.sitePaths().includes(path)){preview.entry=path.slice(W.root.length);preview.hash=parts[1]?'#'+parts[1]:'';preview.scroll=0;await refreshPreview();}else toast('That HTML page is not in this ZIP.');};$('#viewport').onchange=fitPreview; function fitPreview(){const stage=$('.frame-stage'),available=Math.max(200,stage.clientWidth-32),width=$('#viewport').value==='100%'?available:parseInt($('#viewport').value,10),scale=Math.min(1,available/width);$('#frame-wrap').style.width=width*scale+'px';$('#preview').style.width=width+'px';$('#preview').style.height=Math.max(300,(stage.clientHeight-16)/scale)+'px';$('#preview').style.transform='scale('+scale+')';$('#preview').style.transformOrigin='top left';}new ResizeObserver(fitPreview).observe($('.frame-stage'));$('#refresh').onclick=()=>safe(()=>refreshPreview());$('#intro-preview').onclick=()=>safe(()=>refreshPreview(true));$('#toggle-inspector').onclick=()=>$('.studio-body').classList.toggle('hide-inspector');$('#close-inspector').onclick=()=>$('.studio-body').classList.add('hide-inspector');
+$('#preview-route').onchange=e=>safe(async()=>{if(e.target.value.startsWith('@page:')){preview.entry=e.target.value.slice(6);preview.search='';preview.hash='';preview.scroll=0;await refreshPreview();}else if(preview.entry){preview.entry=null;preview.search='';preview.hash=e.target.value;preview.scroll=0;await refreshPreview();}else preview.route(e.target.value);setMode(false);}); preview.onRoute=hash=>{const value=preview.entry?'@page:'+preview.entry:hash;if([...$('#preview-route').options].some(o=>o.value===value))$('#preview-route').value=value;}; preview.onPage=async href=>{const parts=href.split('#'),path=C.resolve(W.root+(preview.entry||W.entry),parts[0].split('?')[0]);if(W.sitePaths().includes(path)){preview.entry=path.slice(W.root.length);preview.search=parts[0].includes('?')?'?'+parts[0].split('?').slice(1).join('?'):'';preview.hash=parts[1]?'#'+parts[1]:'';preview.scroll=0;await refreshPreview();}else toast('That HTML page is not in this ZIP.');};$('#viewport').onchange=fitPreview; function fitPreview(){const stage=$('.frame-stage'),available=Math.max(200,stage.clientWidth-32),width=$('#viewport').value==='100%'?available:parseInt($('#viewport').value,10),scale=Math.min(1,available/width);$('#frame-wrap').style.width=width*scale+'px';$('#preview').style.width=width+'px';$('#preview').style.height=Math.max(300,(stage.clientHeight-16)/scale)+'px';$('#preview').style.transform='scale('+scale+')';$('#preview').style.transformOrigin='top left';}new ResizeObserver(fitPreview).observe($('.frame-stage'));$('#refresh').onclick=()=>safe(()=>refreshPreview());$('#intro-preview').onclick=()=>safe(()=>refreshPreview(true));$('#toggle-inspector').onclick=()=>$('.studio-body').classList.toggle('hide-inspector');$('#close-inspector').onclick=()=>$('.studio-body').classList.add('hide-inspector');
 $('#content-tab').onclick=()=>{if(selection)select(selection);else renderWelcome();};$('#assets-tab').onclick=()=>safe(()=>openAssets());$('#files-tab').onclick=()=>safe(()=>openFiles());$('#section-search').oninput=renderNav;
 const named=[['profileWidgets','Profile & welcome','◈'],['introWidgets','Opening intro','✦'],['projectItems','Projects','▦'],['projectCategories','Categories','⊞'],['projectSettings','Project appearance','◧'],['codeSnippetSettings','Code settings','⌘'],['skillGroups','Skills','⋈'],['contactWidgets','Contact','✉'],['portfolioThemes','Theme & typography','◐'],['experience','Video & behaviour','▷'],['resumeSettings','Resume','▤'],['certificateWidgets','Certificates','◇'],['siteSettings','Site & navigation','☷'],['projectSectionWidgets','Projects heading','T']];
 function renderNav(){const nav=$('#sections');nav.replaceChildren();const query=$('#section-search').value.toLowerCase();const used=new Set();for(const[n,label,icon]of named){const r=rootRef(n);if(!r||query&&!label.toLowerCase().includes(query))continue;used.add(r.file+':'+n);const b=button('',()=>{select(r);if(n==='projectItems')preview.route('#projects');else if(n==='profileWidgets')preview.route('#top');},'section-link');b.append(h('span',{text:icon+'  '+label}));const val=models.find(m=>m.file===r.file)?.roots.find(x=>x.name===n)?.value;if(Array.isArray(val))b.append(h('span',{class:'count',text:val.length}));b.classList.toggle('active',selection?.root===n);nav.append(b);}
