@@ -1,10 +1,3 @@
-Portfolio Studio - Structure Editor
-
-For GitHub Pages: extract this ZIP and put index.html and .nojekyll in your editor publishing folder. After deployment, refresh with Ctrl+Shift+R.
-For local use: open index.html in Chrome or Edge, then choose your PORTFOLIO WEBSITE ZIP. The source folder and build.py are included for modifying/rebuilding the editor; they are not required to run the standalone index.html.
-
-After import, Website structure opens automatically. Click any preview element for its content and related settings. Open groups to reach custom settings, helper options, inherited values and lists. Repeated HTML content also has list controls. Read README.md for capabilities and VALIDATION.md for checks and known limits.
-
-Automatic detection covers supported static HTML, JavaScript and JSON patterns. It is not universal program understanding. Unsupported/computed cases remain available through source editing. Browser interaction tests for this update could not run because local browser use was disabled; automated analysis, inspector and file-preservation tests passed.
-
-Nothing is published by the editor itself. Original imported ZIPs remain unchanged. Export website creates a separate ZIP with your changes.
+Extract this ZIP. Open index.html to edit locally.
+To host the EDITOR with GitHub Pages, upload these extracted files so index.html is at the publishing root.
+To publish your PORTFOLIO instead, use Export website inside the editor and upload that extracted website.

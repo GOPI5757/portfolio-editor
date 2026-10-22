@@ -1,7 +1,7 @@
 /* Editor preference only: never copied into imported/exported websites. */
 (()=>{
- const key='portfolio-studio-theme';let theme='light';
- try{if(localStorage.getItem(key)==='dark')theme='dark';}catch{}
+ const key='portfolio-studio-theme';let theme='dark';
+ try{if(localStorage.getItem(key)==='light')theme='light';}catch{}
  const apply=next=>{theme=next==='dark'?'dark':'light';document.documentElement.dataset.editorTheme=theme;document.querySelectorAll('[data-theme-toggle]').forEach(button=>{button.setAttribute('aria-checked',String(theme==='dark'));button.title=theme==='dark'?'Switch editor to light theme':'Switch editor to dark theme';});};
  apply(theme);
  document.addEventListener('DOMContentLoaded',()=>{

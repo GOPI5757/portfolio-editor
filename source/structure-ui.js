@@ -1,6 +1,6 @@
 /* Structure-first inspector controls; uses the shared workspace and undo stack. */
 const A=PortfolioAnalysis;
-$('#analysis-tab').onclick=()=>safe(showWebsiteStructure);
+
 $('#field-search').oninput=()=>{const query=$('#field-search').value.toLowerCase();for(const node of $('#fields').querySelectorAll('.field,.branch,.list-card,.setting-group')){node.hidden=!!query&&!node.textContent.toLowerCase().includes(query)&&![...node.querySelectorAll('input,textarea')].some(x=>x.value.toLowerCase().includes(query));}};
 function friendlyRef(r){return {...r,label:r.label||C.label(r.path?.at(-1)||r.root)};}
 function groupBox(title,description,open=false){const box=h('details',{class:'setting-group',...(open?{open:''}:{})},[h('summary',{text:title}),h('p',{class:'field-help',text:description})]);return box;}

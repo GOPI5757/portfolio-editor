@@ -1,70 +1,24 @@
-# Validation
+# Validation — Visual Editor update
 
-Validated against the supplied `gopinath-portfolio.zip` on 22 October 2026.
+## Checks performed on 22 October 2026
 
-## Passed
+- Parsed all shipped JavaScript and built the embedded standalone editor.
+- Tested real artist-template text binding, helper arguments, inherited options and optional text styles. Local changes left the shared helper file unchanged.
+- Tested the new inspector with a DOM unit harness: visible content fields, custom enabled setting, typed appearance controls, text save, and no source/configuration paths in the interface.
+- Tested direct canvas text editing with a DOM unit harness: selecting one text node in a formatted sentence, preserving the bold span and original text nodes, Escape cancellation, and flushing the text before export.
+- Tested contextual matching and refusal to choose an arbitrary duplicate text source.
+- Tested artist project/category detection, plain JavaScript data lists, names stored in helper calls, unique project IDs, copied nested media/detail templates, undo/redo and export/reimport.
+- Tested navigation classification for local standalone HTML, query-based detail pages, hash project routes, external addresses and unknown destinations.
+- Re-ran the existing module-loader checks: top-level await, local static/dynamic modules, query context, and compilation of both supplied portfolios.
+- Re-ran repeated-HTML unit checks for detection, duplicate ID/ARIA relinking, reordering and removal.
+- Re-ran inline-script, overlapping formatted-text fallback and concurrent-save regression checks.
+- Round-tripped the complete supplied gameplay portfolio ZIP with one test edit. All 1,647 untouched file contents matched their original SHA-256 hashes. The original ZIP was not modified.
+- Checked final package integrity and embedded output against the readable sources.
 
-- Fixed the artist template's blank preview caused by top-level `await` and literal dynamic imports. Verified its homepage and The Silent Gate project page, including query-based project selection and phone preview, against the static files in the supplied artist portfolio folder.
-- Exported the artist template through the browser UI and verified that all original file contents were preserved byte for byte.
-- Verified asynchronous dependencies, cached dynamic imports and page/query context in module-loader tests. Rechecked the gameplay portfolio homepage and Digging Game page with the updated loader.
-- Imported the full 237,566,787-byte portfolio archive in the browser.
-- Detected 35 configuration roots, including all 11 projects, project categories, appearance settings and separate code configurations.
-- Rendered the portfolio with local images and fonts inside its isolated preview.
-- Checked desktop and phone preview layouts and the fit-to-canvas option.
-- Changed profile text through a configuration control and verified the new title in the rendered portfolio; reverted the test edit.
-- Added a project with an automatically generated ID, created its code file/registry entry, and added a snippet with a filename, code and explanation.
-- Created an asset folder, uploaded an SVG and renamed it through the asset library.
-- Verified relative CSS, HTML and JS asset reference updates and undo/redo in workspace tests.
-- Restored a saved local browser draft.
-- Edited plain HTML text and a CSS color through the standalone editor, exported through its UI, and inspected the downloaded ZIP to confirm both changes and the generated stylesheet link.
-- Round-tripped the complete real portfolio ZIP with one configuration edit. All **1,647 other file contents** matched their original SHA-256 hashes, including hidden files and binary media.
-- Checked JavaScript syntax and preservation of imported/computed configuration references.
-- Built the single-file editor with its scripts, stylesheet and dependency licenses bundled; no runtime CDN dependency.
+## Verification boundary
 
-## Testing boundaries
+Interactive browser testing of this update could not run. Browser access continued to return “Local browser use is disabled in Work settings”, including after the user enabled it, mentioned Browser, and the connection was refreshed.
 
-The bundled editor was tested through a localhost browser preview. The browser automation tool blocks `file://` navigation, so the direct double-click launch could not be automated. The standalone file contains its own scripts and styles and reads uploaded ZIPs through browser file APIs; it does not need a server to perform editing or export. Local draft storage availability depends on the browser and its storage policy.
+DOM unit harnesses check logic, not real-browser layout or pointer interaction. The new floating toolbar, on-canvas Add controls, separate HTML detail-page duplication and empty HTML-list restoration still need interactive verification when that permission error is resolved. This build must not be described as universally compatible or bug-free.
 
-Previewed websites may require internet access for their external images, fonts and embedded videos. External navigation, remote scripts, API requests and form submissions are deliberately blocked inside the isolated preview; exported websites retain their original code.
-
-Automatic controls cover static exported objects/arrays and JSON configurations. Computed expressions, unsupported module patterns and arbitrary framework source remain available through source editing and may need the website's usual build tools. Dynamic filename expressions cannot be safely inferred when renaming assets.
-
-No test changes were applied to the supplied original ZIP. The editor package does not include the portfolio archive, its assets, saved drafts or test exports.
-
-## Editor fixes verified on 22 October 2026
-
-- Selected both Game Artist and Portfolio in the actual artist template preview; both connected to config/home.js. Edited title text and font size, verified rendering, exported through the UI, and confirmed only config/home.js changed. Helper calls and spread arguments remained intact.
-- Used the actual Projects navigation link, project category filter, project card, Details anchor, subcategory menu/Atmosphere anchor and return-to-projects link. The imported site remained in the preview throughout. Checked the final build's return scroll position and phone Contact navigation.
-- Edited a plain HTML heading, font size, alignment and color rapidly through their controls; all changes survived together. Verified ordinary text, generated text fallback, and generated-text undo/redo.
-- Exported the plain-site test through the UI, inspected its files, and opened the exported site independently of the editor. Verified rendered text plus computed 38px size, center alignment and rgb(187, 51, 68) color.
-- Automated checks cover syntax-safe helper literal edits, escaping, concurrent writes, undo/redo, alpha colors and project scoping. Existing full gameplay ZIP preservation and module-loader tests still pass.
-
-These checks cover the reported failures and related editing/export paths; they do not establish compatibility with every possible website framework or runtime.
-
-## Theme and credit update
-
-Verified light/dark switching on the welcome screen and in an imported artist workspace, keyboard activation, and retention of the dark choice after reload. Checked both theme appearances and the visible By Gopinath credit. The preference is editor-local, and the theme script does not modify the imported workspace or iframe content.
-
-## Final viewport, formatted-text and navigation checks
-
-- Measured the preview iframe and its visible wrapper in Desktop 1280, Tablet 768, Phone 390, Small 320 and Fit canvas modes. Their visible heights matched within 0.003 CSS pixels; the outer preview stage stayed at scroll position zero. Repeated with the inspector hidden and reopened.
-- On the supplied artist template, navigated from Projects to The Silent Gate, used the Details category anchor, selected a heading after scrolling, and switched preview widths. The editor stayed within the browser height and the website remained within its preview frame. Verified the Top button and light/dark switching.
-- Edited both parts of a static heading containing a span, and separately selected and changed a nested strong element. Browser export retained span, strong and em markup.
-- Edited two parts of a dynamically generated sentence, exported the ZIP, and opened the exported site independently. Verified the text and bold span (computed font weight 700); the original generating JavaScript remained byte-for-byte unchanged.
-- Verified Ctrl+Z and Ctrl+Y from inspector fields and with preview focus, including refreshed inspector values. Checked inspector Back, Forward and Parent navigation.
-- Added an automated regression check for overlapping parent/child text edits: the latest edit wins, original text nodes remain intact and repeated application causes no oscillating updates.
-- Re-ran core, element, module and workspace tests, including the full portfolio ZIP comparison: all 1,647 untouched files retained their SHA-256 hashes.
-
-These are targeted checks of the reported issues and related paths, not a guarantee against every possible website-specific issue.
-
-## Structural analysis update — automated verification
-
-- Added file inventory and source dependency analysis, with explicit unsupported-language diagnostics and cached reparsing after edits.
-- Tested helper-call traversal, object spreads, imported settings, custom booleans/numbers, global/local JavaScript data, JSON matching, and contextual links to owning lists.
-- Tested AST-backed nested edits, including newly added array entries, without changing helper calls or unrelated source.
-- Tested inspector rendering using the real artist template's home/helpers configurations in a DOM unit harness. Verified helper options, inherited fields, shared-default navigation, a local enabled override, list controls and nested item fields. The local override left the shared helper file unchanged.
-- Tested repeated HTML group detection, duplication, unique IDs, relinking of internal anchors and ARIA references, ordering, removal, and adding from a remaining template using a DOM unit harness.
-- Tested inline-script discovery and edits to the correct script, preservation of other scripts/markup, and undo/redo using an HTML unit adapter.
-- Tested suggested shapes for empty data arrays used by recognizable item-rendering callbacks.
-
-Interactive browser verification of this update was unavailable: the browser tool continued to report that local browser use was disabled. The DOM harness checks are not a substitute for visual/interactive browser testing. Prior browser results above apply to the earlier build. This version must not be described as universally compatible or bug-free.
+Earlier builds had browser verification, but those results do not prove the new interactions. No private website content or test archives are included in the editor package.
