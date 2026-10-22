@@ -90,3 +90,17 @@ Edits are saved in sequence so rapid text and appearance changes do not overwrit
 ## Editor theme and credit
 
 Use the Dark mode switch in the welcome header or editor toolbar to switch between light and dark. The preference is saved in this browser when local storage is available. By Gopinath appears beneath Portfolio Studio on both screens. The theme and credit belong to the editor only; they are not inserted into your imported or exported website.
+
+## Preview, formatted text and inspector navigation
+
+The center preview fits the remaining workspace height. Scroll inside the website to reach its content; the editor header and inspector stay in place. Device presets change the website's logical width, while Fit canvas uses the available width. Use **Top** to return the website to its start.
+
+Select a sentence containing spans, bold text or links to edit its individual **Text parts**. Keep spaces between parts where needed. Select the inline span itself to edit just that text. Formatting and nested markup are retained. Static HTML updates its original text nodes; generated content uses the page-scoped fallback files described above.
+
+Use the larger **Back**, **Forward** and **Parent** arrow buttons above the inspector to navigate previously selected elements and configuration sections.
+
+- **Ctrl+Z** (Mac: Cmd+Z): undo a website edit.
+- **Ctrl+Y** or **Ctrl+Shift+Z** (Mac: Cmd equivalents): redo.
+- **Ctrl+S** (Mac: Cmd+S): save a local draft.
+
+Workspace undo/redo also works while the preview has focus. Native text undo remains available in source-editing dialogs and the imported website's own text inputs. Pending inspector edits are committed before workspace undo, redo and export.

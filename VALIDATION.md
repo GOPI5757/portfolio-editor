@@ -44,3 +44,15 @@ These checks cover the reported failures and related editing/export paths; they 
 ## Theme and credit update
 
 Verified light/dark switching on the welcome screen and in an imported artist workspace, keyboard activation, and retention of the dark choice after reload. Checked both theme appearances and the visible By Gopinath credit. The preference is editor-local, and the theme script does not modify the imported workspace or iframe content.
+
+## Final viewport, formatted-text and navigation checks
+
+- Measured the preview iframe and its visible wrapper in Desktop 1280, Tablet 768, Phone 390, Small 320 and Fit canvas modes. Their visible heights matched within 0.003 CSS pixels; the outer preview stage stayed at scroll position zero. Repeated with the inspector hidden and reopened.
+- On the supplied artist template, navigated from Projects to The Silent Gate, used the Details category anchor, selected a heading after scrolling, and switched preview widths. The editor stayed within the browser height and the website remained within its preview frame. Verified the Top button and light/dark switching.
+- Edited both parts of a static heading containing a span, and separately selected and changed a nested strong element. Browser export retained span, strong and em markup.
+- Edited two parts of a dynamically generated sentence, exported the ZIP, and opened the exported site independently. Verified the text and bold span (computed font weight 700); the original generating JavaScript remained byte-for-byte unchanged.
+- Verified Ctrl+Z and Ctrl+Y from inspector fields and with preview focus, including refreshed inspector values. Checked inspector Back, Forward and Parent navigation.
+- Added an automated regression check for overlapping parent/child text edits: the latest edit wins, original text nodes remain intact and repeated application causes no oscillating updates.
+- Re-ran core, element, module and workspace tests, including the full portfolio ZIP comparison: all 1,647 untouched files retained their SHA-256 hashes.
+
+These are targeted checks of the reported issues and related paths, not a guarantee against every possible website-specific issue.
