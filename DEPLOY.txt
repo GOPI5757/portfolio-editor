@@ -1,0 +1,5 @@
+Portfolio Studio - light/dark theme and By Gopinath credit
+
+Extract this ZIP. Replace index.html in your EDITOR GitHub Pages publishing folder and include .nojekyll alongside it. After deployment finishes, press Ctrl+Shift+R. Use the Dark mode switch on the welcome screen or editor toolbar; the preference is remembered in this browser.
+
+Includes the earlier navigation, configuration, text and appearance editing fixes. The theme and credits apply only to the editor, not your imported or exported website.
