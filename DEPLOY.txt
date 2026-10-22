@@ -1,9 +1,10 @@
-Portfolio Studio - final viewport and text-editing fixes
+Portfolio Studio - Structure Editor
 
-Extract this ZIP. Replace index.html in your EDITOR GitHub Pages publishing folder, with .nojekyll alongside it. After deployment finishes, press Ctrl+Shift+R to load the new editor.
+For GitHub Pages: extract this ZIP and put index.html and .nojekyll in your editor publishing folder. After deployment, refresh with Ctrl+Shift+R.
+For local use: open index.html in Chrome or Edge, then choose your PORTFOLIO WEBSITE ZIP. The source folder and build.py are included for modifying/rebuilding the editor; they are not required to run the standalone index.html.
 
-For local use, open index.html in Chrome or Edge. Choose your portfolio website ZIP, not this editor ZIP.
+After import, Website structure opens automatically. Click any preview element for its content and related settings. Open groups to reach custom settings, helper options, inherited values and lists. Repeated HTML content also has list controls. Read README.md for capabilities and VALIDATION.md for checks and known limits.
 
-Includes a fitted preview with Top control, formatted text-part editing, Back/Forward/Parent inspector arrows, Ctrl+Z undo and Ctrl+Y redo. Dark/light mode and By Gopinath credits remain included.
+Automatic detection covers supported static HTML, JavaScript and JSON patterns. It is not universal program understanding. Unsupported/computed cases remain available through source editing. Browser interaction tests for this update could not run because local browser use was disabled; automated analysis, inspector and file-preservation tests passed.
 
-The editor does not publish changes or modify the original imported ZIP. Export website creates a separate updated website ZIP. README.md contains usage details; VALIDATION.md records checks and compatibility limits.
+Nothing is published by the editor itself. Original imported ZIPs remain unchanged. Export website creates a separate ZIP with your changes.

@@ -5,7 +5,7 @@ A local browser editor for Gopinath's static portfolio. It imports your website 
 ## Start here
 
 1. Extract this editor ZIP to a folder on your computer.
-2. Open **Portfolio Studio.html** in a current desktop Chrome or Edge browser. Double-clicking it is enough. Nothing needs installing.
+2. Open **index.html** in a current desktop Chrome or Edge browser. Double-clicking it is enough. Nothing needs installing.
 3. Choose your **portfolio website ZIP**. For your current portfolio, select `gopinath-portfolio.zip`, not this editor's ZIP.
 4. Choose a section on the left, or click **Select to edit** and select text or an image in the preview.
 5. Change a field and click outside it. The preview refreshes automatically.
@@ -71,7 +71,7 @@ The isolated preview disables external navigation, remote scripts, API requests 
 
 ## Included files
 
-- `Portfolio Studio.html`: standalone editor with its dependencies bundled.
+- `index.html`: standalone editor with its dependencies bundled.
 - `source/`: readable HTML, CSS and JavaScript sources, with local vendor libraries.
 - `README.md`: this guide.
 - `VALIDATION.md`: checks performed against the supplied portfolio.
@@ -104,3 +104,36 @@ Use the larger **Back**, **Forward** and **Parent** arrow buttons above the insp
 - **Ctrl+S** (Mac: Cmd+S): save a local draft.
 
 Workspace undo/redo also works while the preview has focus. Native text undo remains available in source-editing dialogs and the imported website's own text inputs. Pending inspector edits are committed before workspace undo, redo and export.
+
+## Website structure editor update
+
+Choose **Website structure** in the left sidebar to see the detected settings groups, repeatable lists, connections between files, and file coverage. The editor reads configuration folders first, then the other supported source files. Analysis happens on your device. It does not upload the website or run configuration code to inspect it.
+
+### Editing a selected element
+
+1. Click **Select to edit**, then click the element in the preview.
+2. Edit its text or media field. **Content & custom settings** leads to the surrounding object, helper options, parent sections and repeatable lists.
+3. Open only the group you need. Custom switches, numbers, text, media paths, nested objects and lists use the same controls as the original configuration fields.
+4. Use **Find an inspector setting** to filter the current panel, or **Search website structure** to find groups and fields across files. **Appearance** and **Element attributes** stay collapsed until needed.
+
+A source match is based on the selected content and its context. If multiple sources contain the same value, they are shown separately; check the file and surrounding settings before editing. The editor does not silently pick an ambiguous match.
+
+### Helper functions and shared settings
+
+Objects containing spreads and calls such as `text('Title', {...options})` now expose their local fields without replacing the helper or flattening its code. **Inherited settings** follows resolvable imports/local definitions. **Shared helper defaults** exposes a statically identifiable returned defaults object. Editing a shared value affects every place that uses it.
+
+When a helper has a recognizable options argument spread into its result, **Use a local override** adds an existing default to that element's own options. Change the new field there to customize only that element. Unresolved expressions retain a source-editing link instead of being executed or guessed.
+
+### Lists without config files
+
+- **Data-driven lists:** JavaScript arrays can be detected outside `config/`, including in inline scripts. Selecting content from an item leads to **Manage list**, with add, duplicate, reorder and remove controls. For an empty literal array used by a recognizable `map`, `forEach` or `filter` callback, accessed item fields provide a suggested starting shape. Review it before use; inferred field types are suggestions.
+- **Repeated HTML:** Similar sibling cards, articles, list entries and image groups are detected from the original HTML. **Repeated content** opens their list controls. **Add item from template** duplicates a starting item; **Edit item** changes its text parts, links and media. Internal IDs and links are adjusted in the copy. One template item is retained so the group can still be expanded later.
+- A copied HTML item does not automatically acquire custom JavaScript event handlers or new application records. Existing delegated event handling may work, but application-specific behavior may require source edits. Dynamically generated lists should be changed through their data array when one is detected.
+
+### Coverage and limits
+
+Automatic structured controls cover static JavaScript objects/arrays, supported helper arguments and returned defaults, JSON, and recognizable HTML collections. The analysis also indexes local module dependencies and HTML/CSS resource links. The preview continues to support the static website patterns described earlier in this guide.
+
+There is no universal way for this offline editor to infer the meaning of every possible program. Arbitrary computations, API/server-generated content, minified libraries, unsupported languages such as TypeScript/Vue/YAML, and unbuilt framework applications may need their source or normal build tools. These files are identified in **Analysis coverage & files**, retained on export, and supported textual formats can be opened in **Source files**. An analysis result does not imply that every listed file can run in the preview.
+
+Source edits, list changes and generated-element edits use the existing undo/redo stack, draft storage and ZIP export. Your original ZIP remains unchanged.

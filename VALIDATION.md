@@ -56,3 +56,15 @@ Verified light/dark switching on the welcome screen and in an imported artist wo
 - Re-ran core, element, module and workspace tests, including the full portfolio ZIP comparison: all 1,647 untouched files retained their SHA-256 hashes.
 
 These are targeted checks of the reported issues and related paths, not a guarantee against every possible website-specific issue.
+
+## Structural analysis update — automated verification
+
+- Added file inventory and source dependency analysis, with explicit unsupported-language diagnostics and cached reparsing after edits.
+- Tested helper-call traversal, object spreads, imported settings, custom booleans/numbers, global/local JavaScript data, JSON matching, and contextual links to owning lists.
+- Tested AST-backed nested edits, including newly added array entries, without changing helper calls or unrelated source.
+- Tested inspector rendering using the real artist template's home/helpers configurations in a DOM unit harness. Verified helper options, inherited fields, shared-default navigation, a local enabled override, list controls and nested item fields. The local override left the shared helper file unchanged.
+- Tested repeated HTML group detection, duplication, unique IDs, relinking of internal anchors and ARIA references, ordering, removal, and adding from a remaining template using a DOM unit harness.
+- Tested inline-script discovery and edits to the correct script, preservation of other scripts/markup, and undo/redo using an HTML unit adapter.
+- Tested suggested shapes for empty data arrays used by recognizable item-rendering callbacks.
+
+Interactive browser verification of this update was unavailable: the browser tool continued to report that local browser use was disabled. The DOM harness checks are not a substitute for visual/interactive browser testing. Prior browser results above apply to the earlier build. This version must not be described as universally compatible or bug-free.
